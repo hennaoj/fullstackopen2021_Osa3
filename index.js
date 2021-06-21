@@ -10,18 +10,23 @@ app.use(express.static('build'))
 app.use(express.json())
 
 morgan.token('body', (req) => JSON.stringify(req.body))
+
+//tulostetaan kaikki http-pyynnöt ja niiden sisällöt konsoliin
 app.use(morgan(':method :url :status :res[content-length]  - :response-time ms  :body'))
 
 app.get('/api/persons', (req, res) => {
+    //hakee ja palauttaa kaikki yhteystiedot tietokannasta
     Person.find({}).then(persons => {
         res.json(persons)
     })
 })
 
 app.get('/info', (req, res) => {
+    //kertoo, montako yhteystietoa puhelinluettelossa on ja pyynnön ajan
     const date = new Date()
-    var length = 0
+    var length = 0 //alustetaan yhteystietojen lukumäärä
     Person.find({}).then(persons => {
+        //käydään läpi kaikki henkilöt ja kasvatetaan length-muuttujaa
         persons.forEach(() => {
             length = length + 1
             return length
@@ -36,6 +41,7 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
+    //hakee ja palauttaa tietyn yhteystiedon tietokannasta id:n perusteella
     Person.findById(request.params.id)
         .then(person => {
             if (person) {
@@ -48,6 +54,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
+    //poistaa yhteystiedon tietokannasta id:n perusteella
     Person.findByIdAndRemove(request.params.id)
         .then(() => {
             response.status(204).end()
@@ -56,15 +63,8 @@ app.delete('/api/persons/:id', (request, response, next) => {
 })
 
 app.post('/api/persons', (request, response, next) => {
+    //lisää uuden nimen tietokantaan
     const body = request.body
-
-    if (body.name === undefined) {
-        return response.status(400).json({ error: 'name missing' })
-    }
-
-    if (body.number === undefined) {
-        return response.status(400).json({ error: 'number missing' })
-    }
 
     const person = new Person({
         name: body.name,
@@ -75,11 +75,12 @@ app.post('/api/persons', (request, response, next) => {
         .then(savedPerson => {
             response.json(savedPerson)
         })
-        .catch(error => next(error))
+        .catch(error => next(error)) //jos lisättävä yhteystieto ei vastaa vaatimuksia, käsitellään virhe
 
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
+    //muokataan olemassa olevaa yhteystietoa id:n avulla
     const body = request.body
 
     const person = {
